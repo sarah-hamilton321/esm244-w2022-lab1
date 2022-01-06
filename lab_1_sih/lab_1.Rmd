@@ -79,7 +79,7 @@ blackwood_acacia_df <- sf_trees %>%
   select(legal_status, date, lat = latitude, lon = longitude)
 
 ### Make a little graph of locations
-ggplot(data = blackwood_acacia_df, aes(x = long, y = lat)) +
+ggplot(data = blackwood_acacia_df, aes(x = lon, y = lat)) +
   geom_point(color = 'darkgreen')
 ```
 
@@ -96,4 +96,57 @@ sf_trees_sep <- sf_trees %>%
 ex_5 <- sf_trees %>%
   unite('id_status', tree_id, legal_status, sep = '_COOL_')
 ```
+
+### Part 2: make some maps
+
+**Step 1:** convert lat and lon to spatial points, `st_as_sf()` function
+
+```{r}
+blackwood_acacia_sf <- blackwood_acacia_df %>%
+  drop_na(lat,lon) %>%
+  st_as_sf(coords = c('lon','lat'))
+
+### we need to tell R what the coordinate reference system is 
+st_crs(blackwood_acacia_sf) <- 4326
+
+ggplot(data = blackwood_acacia_sf) +
+  geom_sf(color = 'darkgreen')+
+  theme_minimal()
+
+```
+
+Read in the SF shapefile and add to map
+
+```{r}
+sf_map <- read_sf(here('data','sf_map','tl_2017_06075_roads.shp'))
+
+sf_map_transform <- st_transform(sf_map, 4326)
+
+ggplot(data = sf_map_transform) +
+  geom_sf()
+```
+
+Continue the maps!
+
+```{r}
+ggplot() +
+  geom_sf(data = sf_map,
+          size = 0.1,
+          color = 'darkgray') +
+  geom_sf(data = blackwood_acacia_sf,
+          color = 'red',
+          size = 0.5) +
+  theme_void() +
+  labs(title = 'Blackwood acacias in SF')
+```
+
+### Now an interactive map!
+
+```{r}
+tmap_mode('view')
+
+tm_shape(blackwood_acacia_sf) +
+  tm_dots()
+```
+
 
